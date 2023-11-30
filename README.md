@@ -1,9 +1,9 @@
 # Avent Of Code 2023
 
 # Usage:
-[1] Clone or fork
-[2] Paste input data into `inputs/{day}`, where day is 1 through 24
-[3] Run with `cargo run -- {day}`, where day is 1 through 24
+1. Clone or fork
+2. Paste input data into `inputs/{day}`, where day is 1 through 24
+3. Run with `cargo run -- {day}`, where day is 1 through 24
 
 #### Day 1: TDB
 #### Day 2: TDB
