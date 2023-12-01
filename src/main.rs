@@ -65,15 +65,7 @@ fn day_1() {
                 digits.push(from_word(matched));
                 start = m.get(0).unwrap().start() + 1;
             }
-            let combined = if digits.len() > 1 {
-                digits[0] * 10 + digits.last().unwrap()
-            } else {
-                //digits[0] * 10 // wrong
-                0 // wrong
-                  // digits[0] // wrong
-            };
-            //println!("combined: {combined}");
-            combined
+            digits[0] * 10 + digits.last().unwrap()
         })
         .sum::<u32>();
     println!("Result part 2 for day 1: {}", result_pt2);
