@@ -20,8 +20,63 @@ fn read_lines(day: u8) -> impl Iterator<Item = Result<String, impl std::error::E
 }
 
 fn day_1() {
-    println!("Result for day 1: {}", 0);
-    let inputs = read_lines(1);
+    let result_pt1 = read_lines(1)
+        .into_iter()
+        .filter_map(|s| s.ok())
+        .map(|l| {
+            let digits = l
+                .chars()
+                .into_iter()
+                .filter_map(|c| c.to_digit(10).ok_or(0).ok())
+                .collect::<Vec<u32>>();
+            digits[0] * 10 + digits.last().unwrap()
+        })
+        .sum::<u32>();
+    println!("Result part 1 for day 1: {}", result_pt1);
+    // Part 2
+    let regexp = "(?:one|two|three|four|five|six|seven|eight|nine|[1-9])";
+    let from_word = |w: &str| -> u32 {
+        match w {
+            "one" => 1,
+            "two" => 2,
+            "three" => 3,
+            "four" => 4,
+            "five" => 5,
+            "six" => 6,
+            "seven" => 7,
+            "eight" => 8,
+            "nine" => 9,
+            _ => w.parse().unwrap(),
+        }
+    };
+    let regex = fancy_regex::RegexBuilder::new(regexp)
+        .backtrack_limit(usize::MAX)
+        .build()
+        .unwrap();
+    let result_pt2 = read_lines(1)
+        .into_iter()
+        .filter_map(|s| s.ok())
+        .map(|l| {
+            let mut digits: Vec<u32> = vec![];
+            let mut start = 0;
+            // cumbersome collapsing regex
+            while let Ok(Some(m)) = regex.captures_from_pos(&l, start) {
+                let matched = m.get(0).unwrap().as_str();
+                digits.push(from_word(matched));
+                start = m.get(0).unwrap().start() + 1;
+            }
+            let combined = if digits.len() > 1 {
+                digits[0] * 10 + digits.last().unwrap()
+            } else {
+                //digits[0] * 10 // wrong
+                0 // wrong
+                  // digits[0] // wrong
+            };
+            //println!("combined: {combined}");
+            combined
+        })
+        .sum::<u32>();
+    println!("Result part 2 for day 1: {}", result_pt2);
 }
 
 fn day_2() {
