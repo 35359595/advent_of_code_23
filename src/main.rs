@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_assignments, unused_imports, unused_variables)]
 use core::panic;
 use std::collections::vec_deque::VecDeque;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env::args;
 use std::{
     env,
@@ -72,8 +72,70 @@ fn day_1() {
 }
 
 fn day_2() {
-    println!("Result for day 2: {}", 0);
     let inputs = read_lines(2);
+    let fits = |set: &str| -> bool {
+        let stones = set.split(',');
+        for stone in stones {
+            let pair: Vec<&str> = stone.trim().split(' ').collect();
+            //println!("{pair:?}");
+            let count: u32 = pair[0].parse().unwrap();
+            match pair[1] {
+                "blue" if count > 14 => {
+                    //println!("false blue");
+                    return false;
+                }
+                "green" if count > 13 => {
+                    //println!("false green");
+                    return false;
+                }
+                "red" if count > 12 => {
+                    //println!("false red");
+                    return false;
+                }
+                _ => (),
+            }
+        }
+        //println!("true");
+        true
+    };
+    let res_part1 = inputs
+        .into_iter()
+        .filter_map(|s| s.ok())
+        .enumerate()
+        .filter(|(n, full)| full.split(';').all(fits))
+        .fold(0, |acc, (num, _)| acc + num + 1);
+    println!("Result for day 2: {}", res_part1);
+    // # part 2
+    let inputs = read_lines(2);
+    let min_required = |full: &str| -> u32 {
+        let mut all = HashMap::new();
+        all.insert("blue", 0);
+        all.insert("green", 0);
+        all.insert("red", 0);
+        for set in full.split(';') {
+            let stones = set.split(',');
+            for stone in stones {
+                let pair: Vec<&str> = stone.trim().split(' ').collect();
+                let num: u32 = pair[0].parse().unwrap();
+                if *all.get(pair[1]).unwrap() < num {
+                    all.insert(pair[1], num);
+                }
+            }
+        }
+        let mut blue = all.get("blue").unwrap();
+        let mut red = all.get("red").unwrap();
+        let mut green = all.get("green").unwrap();
+        blue = if blue == &0 { &1 } else { blue };
+        red = if red == &0 { &1 } else { red };
+        green = if green == &0 { &1 } else { green };
+        //println!("b {blue}; r {red}; g {green}");
+        red * blue * green
+    };
+    let res_part2 = inputs
+        .into_iter()
+        .filter_map(|s| s.ok())
+        .fold(0, |acc, full| acc + min_required(&full));
+    println!("part 2: {res_part2}");
 }
 
 fn day_3() {
