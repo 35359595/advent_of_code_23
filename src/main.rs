@@ -205,8 +205,85 @@ fn day_3() {
 }
 
 fn day_4() {
-    println!("Result for day 4: {}", 0);
-    let inputs = read_lines(4);
+    let inputs: Vec<String> = read_lines(4).filter_map(|s| s.ok()).collect();
+    let res_part1: u32 = inputs
+        .into_iter()
+        .map(|full| {
+            let both: Vec<String> = full.trim().split('|').map(|s| s.to_string()).collect();
+            let winning: Vec<u32> = both[0]
+                .trim()
+                .split(' ')
+                .filter(|s| !s.is_empty())
+                .map(|s| s.parse().unwrap())
+                .collect();
+            let res: u32 = both[1]
+                .split(' ')
+                .filter(|s| !s.is_empty())
+                .fold(0, |acc, v| {
+                    let parsed = v.trim().parse().unwrap();
+                    if winning.contains(&parsed) {
+                        if acc == 0 {
+                            1
+                        } else {
+                            acc + acc
+                        }
+                    } else {
+                        acc
+                    }
+                });
+            res
+        })
+        .sum();
+    println!("Result for day 4: {}", res_part1);
+    // #Part 2
+    let inputs: Vec<String> = read_lines(4).filter_map(|s| s.ok()).collect();
+    println!("Result for day 4: {}", day_2_part_2(inputs));
+}
+
+fn day_2_part_2(inputs: impl IntoIterator<Item = String> + Clone) -> u32 {
+    let mut per_card = vec![0u32; inputs.clone().into_iter().count()];
+    inputs
+        .into_iter()
+        .enumerate()
+        .map(|(id, full)| {
+            let both: Vec<String> = full.trim().split('|').map(|s| s.to_string()).collect();
+            let winning: Vec<u32> = both[0]
+                .trim()
+                .split(' ')
+                .filter(|s| !s.is_empty())
+                .map(|s| s.parse().unwrap())
+                .collect();
+            let res: u32 = both[1]
+                .split(' ')
+                .filter(|s| !s.is_empty())
+                .fold(0, |acc, v| {
+                    let parsed = v.trim().parse().unwrap();
+                    if winning.contains(&parsed) {
+                        acc + 1
+                    } else {
+                        acc
+                    }
+                });
+            for i in id + 1..=id + res as usize {
+                per_card[i] += 1 + per_card[id];
+            }
+            per_card[id] += 1;
+        })
+        .for_each(drop);
+    per_card.into_iter().sum()
+}
+
+#[test]
+fn day_4_part_2_test() {
+    let set: [String; 6] = [
+        "41 48 83 86 17 | 83 86  6 31 17  9 48 53".to_string(),
+        "13 32 20 16 61 | 61 30 68 82 17 32 24 19".to_string(),
+        "1 21 53 59 44 | 69 82 63 72 16 21 14  1".to_string(),
+        "41 92 73 84 69 | 59 84 76 51 58  5 54 83".to_string(),
+        "87 83 26 28 32 | 88 30 70 12 93 22 82 36".to_string(),
+        "31 18 13 56 72 | 74 77 10 23 35 67 36 11".to_string(),
+    ];
+    assert_eq!(30, day_2_part_2(set));
 }
 
 fn day_5() {
