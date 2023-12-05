@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_assignments, unused_imports, unused_variables)]
 use core::panic;
+use rayon::prelude::*;
 use std::collections::btree_map::Range;
 use std::collections::vec_deque::VecDeque;
 use std::collections::{HashMap, HashSet};
@@ -287,8 +288,133 @@ fn day_4_part_2_test() {
 }
 
 fn day_5() {
-    println!("Result for day 5: {}", 0);
     let inputs = read_lines(5);
+    let mut inputs = inputs.filter_map(|i| i.ok()).into_iter();
+    let mut seeds = vec![];
+    let mut seed_to_soil = vec![];
+    let mut soil_to_fertilizer = vec![];
+    let mut fertilizer_to_water = vec![];
+    let mut water_to_light = vec![];
+    let mut light_to_temperature = vec![];
+    let mut temperature_to_humidity = vec![];
+    let mut humidity_to_location = vec![];
+
+    while let Some(l) = inputs.next() {
+        if l.trim().eq("seeds:") {
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("seed-to-soil:") {
+                    println!("seed done");
+                    break;
+                }
+                seeds.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("soil-to-fertilizer:") {
+                    println!("soild done");
+                    break;
+                }
+                seed_to_soil.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("fertilizer-to-water:") {
+                    println!("fert done");
+                    break;
+                }
+                soil_to_fertilizer.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("water-to-light:") {
+                    println!("water done");
+                    break;
+                }
+                fertilizer_to_water.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("light-to-temperature:") {
+                    println!("light done");
+                    break;
+                }
+                water_to_light.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("temperature-to-humidity:") {
+                    println!("temp done");
+                    break;
+                }
+                light_to_temperature.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                if l.trim().eq("humidity-to-location:") {
+                    println!("hum done");
+                    break;
+                }
+                temperature_to_humidity.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            while let Some(l) = inputs.next() {
+                humidity_to_location.extend(l.split(' ').map(|d| d.parse::<u32>().unwrap()));
+            }
+            println!("loc done");
+        }
+    }
+    let seed_to_soil_map = day_5_part_1(seed_to_soil);
+    let soil_to_fertilizer_map = day_5_part_1(soil_to_fertilizer);
+    let fertilizer_to_water_map = day_5_part_1(fertilizer_to_water);
+    let water_to_light_map = day_5_part_1(water_to_light);
+    let light_to_temperature_map = day_5_part_1(light_to_temperature);
+    let temperature_to_humidity_map = day_5_part_1(temperature_to_humidity);
+    let humidity_to_location_map = day_5_part_1(humidity_to_location);
+    println!("tthur,c.uh");
+    let res_pt_1 = seeds
+        .into_iter()
+        .map(|s| {
+            day_5_match(
+                &humidity_to_location_map,
+                day_5_match(
+                    &temperature_to_humidity_map,
+                    day_5_match(
+                        &light_to_temperature_map,
+                        day_5_match(
+                            &water_to_light_map,
+                            day_5_match(
+                                &fertilizer_to_water_map,
+                                day_5_match(
+                                    &soil_to_fertilizer_map,
+                                    day_5_match(&seed_to_soil_map, s),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        })
+        .min()
+        .unwrap();
+
+    println!("Result for day 5: {}", res_pt_1);
+}
+
+fn day_5_part_1(set: Vec<u32>) -> HashMap<u32, u32> {
+    let res = set
+        .par_chunks(3)
+        .flat_map(|triplet| {
+            (0..=triplet[2])
+                .into_par_iter()
+                .fold(
+                    || vec![],
+                    |mut acc, i| {
+                        acc.push((triplet[1] + i, triplet[0] + i));
+                        acc
+                    },
+                )
+                .flatten()
+        })
+        .collect();
+    println!("hash parse done");
+    res
+}
+
+fn day_5_match(map: &HashMap<u32, u32>, source: u32) -> u32 {
+    *map.get(&source).unwrap_or(&source)
 }
 
 fn day_6() {
