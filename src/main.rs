@@ -317,8 +317,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -335,8 +335,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -353,8 +353,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -371,8 +371,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -389,8 +389,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -407,8 +407,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -422,8 +422,8 @@ fn day_5() {
                         .chunks(3)
                         .map(|d| {
                             S::new(
-                                d[1].parse().unwrap(),
                                 d[0].parse().unwrap(),
+                                d[1].parse().unwrap(),
                                 d[2].parse().unwrap(),
                             )
                         })
@@ -457,6 +457,33 @@ fn day_5() {
         .unwrap();
 
     println!("Result for day 5: {}", res_pt_1);
+
+    // #Part 2
+    let res_pt_2 = seeds
+        .chunks(2)
+        .flat_map(|s| {
+            (s[0]..=s[0] + s[1]).into_iter().map(|d| {
+                let found = find(
+                    &humidity_to_location,
+                    find(
+                        &temperature_to_humidity,
+                        find(
+                            &light_to_temperature,
+                            find(
+                                &water_to_light,
+                                find(
+                                    &fertilizer_to_water,
+                                    find(&soil_to_fertilizer, find(&seed_to_soil, d)),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
+                found
+            })
+        })
+        .collect::<Vec<u64>>();
+    println!("Result for day 5 part 2: {:?}", res_pt_2);
 }
 
 fn find(set: impl AsRef<[S]>, what: u64) -> u64 {
@@ -483,10 +510,12 @@ impl S {
 
     fn find(&self, what: u64) -> u64 {
         // in range
-        let max = self.source + self.offset;
-        if what >= self.source && what <= max {
-            let dif: i128 = self.source as i128 - self.dest as i128;
-            (max as i128 - self.dest as i128 + dif) as u64
+        // 1. if in range of dest + offset
+        // what - dest + source
+        let max = self.dest + self.offset;
+        if what >= self.dest && what <= max {
+            let res = what - self.dest + self.source;
+            res
         } else {
             what
         } // same
@@ -497,21 +526,21 @@ impl S {
 fn day_5_test() {
     let seeds = [79, 14, 55, 13];
 
-    let seed_to_soil = vec![S::new(98, 50, 2), S::new(50, 52, 48)];
-    let soil_to_fertilizer = vec![S::new(15, 0, 37), S::new(52, 37, 2), S::new(0, 39, 15)];
+    let seed_to_soil = vec![S::new(50, 98, 2), S::new(52, 50, 48)];
+    let soil_to_fertilizer = vec![S::new(0, 15, 37), S::new(37, 52, 2), S::new(39, 0, 15)];
     let fertilizer_to_water = vec![
-        S::new(53, 49, 8),
-        S::new(11, 0, 42),
-        S::new(0, 42, 7),
-        S::new(7, 57, 4),
+        S::new(49, 53, 8),
+        S::new(0, 11, 42),
+        S::new(42, 0, 7),
+        S::new(57, 7, 4),
     ];
-    let water_to_light = vec![S::new(18, 88, 7), S::new(25, 18, 70)];
+    let water_to_light = vec![S::new(88, 18, 7), S::new(18, 25, 70)];
 
-    let light_to_temperature = vec![S::new(77, 45, 23), S::new(45, 81, 19), S::new(64, 68, 13)];
+    let light_to_temperature = vec![S::new(45, 77, 23), S::new(81, 45, 19), S::new(68, 64, 13)];
 
-    let temperature_to_humidity = vec![S::new(69, 0, 1), S::new(0, 1, 69)];
+    let temperature_to_humidity = vec![S::new(0, 69, 1), S::new(1, 0, 69)];
 
-    let humidity_to_location = vec![S::new(56, 60, 37), S::new(93, 56, 4)];
+    let humidity_to_location = vec![S::new(60, 56, 37), S::new(56, 93, 4)];
     for i in seeds {
         println!("for {i}");
         let sts = find(&seed_to_soil, i);
@@ -549,6 +578,38 @@ fn day_5_test() {
     });
     println!("{res_pt_1:?}");
     assert_eq!(res_pt_1.min().unwrap(), 35);
+    // Part 2
+    let res_pt_2 = seeds
+        .chunks(2)
+        .flat_map(|s| {
+            let mut v = vec![];
+            println!("CHunk: {:?}", s);
+            for d in s[0]..=s[0] + s[1] {
+                println!("{d}");
+                let found = find(
+                    &humidity_to_location,
+                    find(
+                        &temperature_to_humidity,
+                        find(
+                            &light_to_temperature,
+                            find(
+                                &water_to_light,
+                                find(
+                                    &fertilizer_to_water,
+                                    find(&soil_to_fertilizer, find(&seed_to_soil, d)),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
+                println!("{found}");
+                v.push(found);
+            }
+            v
+        })
+        .min()
+        .unwrap();
+    assert_eq!(46, res_pt_2);
 }
 
 fn day_6() {
