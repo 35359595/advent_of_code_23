@@ -461,9 +461,11 @@ fn day_5() {
     // #Part 2
     let res_pt_2 = seeds
         .chunks(2)
-        .flat_map(|s| {
-            (s[0]..=s[0] + s[1]).into_iter().map(|d| {
-                let found = find(
+        .map(|s| {
+            let mut vd: VecDeque<u64> = (s[0]..=s[0] + s[1]).collect();
+            println!("Done deque");
+            let found = |d: u64| -> u64 {
+                find(
                     &humidity_to_location,
                     find(
                         &temperature_to_humidity,
@@ -478,12 +480,32 @@ fn day_5() {
                             ),
                         ),
                     ),
-                );
-                found
-            })
+                )
+            };
+
+            let mut front = found(vd.pop_front().unwrap());
+            let mut back = found(vd.pop_back().unwrap());
+            loop {
+                let new_front = found(vd.pop_front().unwrap());
+                if front > new_front {
+                    front = new_front
+                } else {
+                    break;
+                }
+            }
+            loop {
+                let new_back = found(vd.pop_back().unwrap());
+                if back > new_back {
+                    back = new_back
+                } else {
+                    break;
+                }
+            }
+            front.min(back)
         })
-        .collect::<Vec<u64>>();
-    println!("Result for day 5 part 2: {:?}", res_pt_2);
+        .min()
+        .unwrap();
+    println!("Result for day 5 part 2: {}", res_pt_2);
 }
 
 fn find(set: impl AsRef<[S]>, what: u64) -> u64 {
@@ -491,6 +513,13 @@ fn find(set: impl AsRef<[S]>, what: u64) -> u64 {
         return what;
     };
     found.find(what)
+}
+
+fn in_range(set: impl AsRef<[S]>, what: u64) -> bool {
+    set.as_ref()
+        .par_iter()
+        .find_first(|v| v.find(what) != what)
+        .is_some()
 }
 
 struct S {
@@ -579,14 +608,12 @@ fn day_5_test() {
     println!("{res_pt_1:?}");
     assert_eq!(res_pt_1.min().unwrap(), 35);
     // Part 2
-    let res_pt_2 = seeds
+    let res_pt_2: u64 = seeds
         .chunks(2)
-        .flat_map(|s| {
-            let mut v = vec![];
-            println!("CHunk: {:?}", s);
-            for d in s[0]..=s[0] + s[1] {
-                println!("{d}");
-                let found = find(
+        .map(|s| {
+            let mut vd: VecDeque<u64> = (s[0]..=s[0] + s[1]).collect();
+            let found = |d: u64| -> u64 {
+                find(
                     &humidity_to_location,
                     find(
                         &temperature_to_humidity,
@@ -601,11 +628,28 @@ fn day_5_test() {
                             ),
                         ),
                     ),
-                );
-                println!("{found}");
-                v.push(found);
+                )
+            };
+
+            let mut front = found(vd.pop_front().unwrap());
+            let mut back = found(vd.pop_back().unwrap());
+            loop {
+                let new_front = found(vd.pop_front().unwrap());
+                if front >= new_front {
+                    front = new_front
+                } else {
+                    break;
+                }
             }
-            v
+            loop {
+                let new_back = found(vd.pop_back().unwrap());
+                if back >= new_back {
+                    back = new_back
+                } else {
+                    break;
+                }
+            }
+            front.min(back)
         })
         .min()
         .unwrap();
