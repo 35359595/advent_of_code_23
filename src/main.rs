@@ -611,7 +611,7 @@ fn day_5_test() {
     let res_pt_2: u64 = seeds
         .chunks(2)
         .map(|s| {
-            let mut vd: VecDeque<u64> = (s[0]..=s[0] + s[1]).collect();
+            let vd: Vec<u64> = (s[0]..=s[0] + s[1]).collect();
             let found = |d: u64| -> u64 {
                 find(
                     &humidity_to_location,
@@ -630,35 +630,68 @@ fn day_5_test() {
                     ),
                 )
             };
-
-            let mut front = found(vd.pop_front().unwrap());
-            let mut back = found(vd.pop_back().unwrap());
-            loop {
-                let new_front = found(vd.pop_front().unwrap());
-                if front >= new_front {
-                    front = new_front
-                } else {
-                    break;
-                }
-            }
-            loop {
-                let new_back = found(vd.pop_back().unwrap());
-                if back >= new_back {
-                    back = new_back
-                } else {
-                    break;
-                }
-            }
-            front.min(back)
+            divide_and_conquer_day_5(vd[1usize..].as_ref(), vd[1], &found)
         })
         .min()
         .unwrap();
     assert_eq!(46, res_pt_2);
 }
+fn divide_and_conquer_day_5(set: &[u64], current_min: u64, found: &dyn Fn(u64) -> u64) -> u64 {
+    let len = set.len();
+    if len == 0 {
+        return current_min;
+    }
+    let new_found = found(set[0]);
+    let back_found = found(set[len - 1]);
+    if len == 2 {
+        return new_found.min(back_found);
+    }
+    divide_and_conquer_day_5(&set[1..len / 2], current_min, found).min(divide_and_conquer_day_5(
+        &set[len / 2..len - 1],
+        current_min,
+        found,
+    ))
+}
 
 fn day_6() {
-    println!("Result for day 6: {}", 0);
-    let inputs = read_lines(6);
+    let inputs: Vec<String> = read_lines(6).filter_map(|s| s.ok()).collect();
+    let times: Vec<u32> = inputs[0]
+        .split(' ')
+        .map(&str::parse)
+        .filter_map(|s| s.ok())
+        .collect();
+    let distance: Vec<u32> = inputs[1]
+        .split(' ')
+        .map(&str::parse)
+        .filter_map(|s| s.ok())
+        .collect();
+    let res_pt_1 = times
+        .into_iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let mut summ = 0;
+            (0..t).for_each(|s| {
+                let hold = t - s;
+                let mtp = hold * s;
+                if mtp > distance[i] {
+                    summ += 1;
+                }
+            });
+            summ
+        })
+        .fold(1, |acc, t| acc * t);
+    println!("Result for day 6: {}", res_pt_1);
+    // Part 2
+    let time: u128 = 56977875;
+    let distance: u128 = 546192711311139;
+    let mut total = 0;
+    for i in 0..time {
+        let hold = time - i;
+        if hold * i > distance {
+            total += 1;
+        }
+    }
+    println!("Part 2 {total}");
 }
 
 fn day_7() {
