@@ -462,8 +462,8 @@ fn day_5() {
     let res_pt_2 = seeds
         .chunks(2)
         .map(|s| {
-            let mut vd: VecDeque<u64> = (s[0]..=s[0] + s[1]).collect();
-            println!("Done deque");
+            let vd: Vec<u64> = (s[0]..=s[0] + s[1]).collect();
+            println!("Done vec");
             let found = |d: u64| -> u64 {
                 find(
                     &humidity_to_location,
@@ -482,26 +482,9 @@ fn day_5() {
                     ),
                 )
             };
-
-            let mut front = found(vd.pop_front().unwrap());
-            let mut back = found(vd.pop_back().unwrap());
-            loop {
-                let new_front = found(vd.pop_front().unwrap());
-                if front > new_front {
-                    front = new_front
-                } else {
-                    break;
-                }
-            }
-            loop {
-                let new_back = found(vd.pop_back().unwrap());
-                if back > new_back {
-                    back = new_back
-                } else {
-                    break;
-                }
-            }
-            front.min(back)
+            divide_and_conquer_day_5(vd[..vd.len() / 2].as_ref(), vd[1], &found).min(
+                divide_and_conquer_day_5(&vd[vd.len() / 2..], vd[vd.len() - 1], &found),
+            )
         })
         .min()
         .unwrap();
@@ -630,7 +613,9 @@ fn day_5_test() {
                     ),
                 )
             };
-            divide_and_conquer_day_5(vd[1usize..].as_ref(), vd[1], &found)
+            divide_and_conquer_day_5(vd[..vd.len() / 2].as_ref(), vd[1], &found).min(
+                divide_and_conquer_day_5(&vd[vd.len() / 2..], vd[vd.len() - 1], &found),
+            )
         })
         .min()
         .unwrap();
@@ -638,17 +623,23 @@ fn day_5_test() {
 }
 fn divide_and_conquer_day_5(set: &[u64], current_min: u64, found: &dyn Fn(u64) -> u64) -> u64 {
     let len = set.len();
-    if len == 0 {
+    if len < 2 {
         return current_min;
     }
     let new_found = found(set[0]);
     let back_found = found(set[len - 1]);
     if len == 2 {
-        return new_found.min(back_found);
+        let ret = new_found.min(back_found);
+        return ret;
     }
-    divide_and_conquer_day_5(&set[1..len / 2], current_min, found).min(divide_and_conquer_day_5(
+    divide_and_conquer_day_5(
+        &set[1..len / 2],
+        current_min.min(new_found).min(back_found),
+        found,
+    )
+    .min(divide_and_conquer_day_5(
         &set[len / 2..len - 1],
-        current_min,
+        current_min.min(new_found).min(back_found),
         found,
     ))
 }
