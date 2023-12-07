@@ -7,6 +7,8 @@ name = "advent23"
 version = "0.1.0"
 dependencies = [
  "fancy-regex",
+ "itertools",
+ "range-ext",
  "rayon",
 ]
 
@@ -96,6 +98,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "memchr"
 version = "2.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -109,6 +120,12 @@ checksum = "5a634b1c61a95585bd15607c6ab0c4e5b226e695ff2800ba0cdccddf208c406c"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "range-ext"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ef928f61c6999ac5f35fe4cbba7ba0b70040d4089d63fc7416e50802d6c0872"
 
 [[package]]
 name = "rayon"

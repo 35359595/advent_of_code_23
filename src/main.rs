@@ -1,10 +1,12 @@
 #![allow(dead_code, unused_assignments, unused_imports, unused_variables)]
 use core::panic;
+use itertools::Itertools;
+use range_ext::intersect::{Intersect, Intersection, IntersectionExt};
 use rayon::prelude::*;
-use std::collections::btree_map::Range;
 use std::collections::vec_deque::VecDeque;
 use std::collections::{HashMap, HashSet};
 use std::env::args;
+use std::ops::Range;
 use std::{
     env,
     fs::File,
@@ -19,6 +21,19 @@ fn read_lines(day: u8) -> impl Iterator<Item = Result<String, impl std::error::E
         panic!("File for day {day} not found at {dir}");
     };
     BufReader::new(file).lines().into_iter()
+}
+
+fn read_string(day: u8) -> String {
+    let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let dir = format!("{}/inputs/{}", cargo_dir, day);
+    let Ok(file) = File::open(&dir) else {
+        panic!("File for day {day} not found at {dir}");
+    };
+    BufReader::new(file)
+        .lines()
+        .into_iter()
+        .filter_map(|s| s.ok())
+        .join("\n")
 }
 
 fn day_1() {
@@ -300,14 +315,23 @@ fn day_5() {
     let mut humidity_to_location = vec![];
 
     while let Some(l) = inputs.next() {
+        if l.is_empty() {
+            continue;
+        }
         if l.trim().eq("seeds:") {
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("seed-to-soil:") {
                     break;
                 }
                 seeds.extend(l.split(' ').map(|s| s.parse::<u64>().unwrap()));
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("soil-to-fertilizer:") {
                     break;
                 }
@@ -326,6 +350,9 @@ fn day_5() {
                 );
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("fertilizer-to-water:") {
                     break;
                 }
@@ -344,6 +371,9 @@ fn day_5() {
                 );
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("water-to-light:") {
                     break;
                 }
@@ -362,6 +392,9 @@ fn day_5() {
                 );
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("light-to-temperature:") {
                     break;
                 }
@@ -380,6 +413,9 @@ fn day_5() {
                 );
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("temperature-to-humidity:") {
                     break;
                 }
@@ -398,6 +434,9 @@ fn day_5() {
                 );
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 if l.trim().eq("humidity-to-location:") {
                     break;
                 }
@@ -416,6 +455,9 @@ fn day_5() {
                 );
             }
             while let Some(l) = inputs.next() {
+                if l.is_empty() {
+                    continue;
+                }
                 humidity_to_location.extend(
                     l.split(' ')
                         .collect::<Vec<&str>>()
@@ -459,36 +501,105 @@ fn day_5() {
     println!("Result for day 5: {}", res_pt_1);
 
     // #Part 2
-    let res_pt_2 = seeds
-        .chunks(2)
-        .map(|s| {
-            let vd: Vec<u64> = (s[0]..=s[0] + s[1]).collect();
-            println!("Done vec");
-            let found = |d: u64| -> u64 {
-                find(
-                    &humidity_to_location,
-                    find(
-                        &temperature_to_humidity,
-                        find(
-                            &light_to_temperature,
-                            find(
-                                &water_to_light,
-                                find(
-                                    &fertilizer_to_water,
-                                    find(&soil_to_fertilizer, find(&seed_to_soil, d)),
-                                ),
-                            ),
-                        ),
-                    ),
-                )
-            };
-            divide_and_conquer_day_5(vd[..vd.len() / 2].as_ref(), vd[1], &found).min(
-                divide_and_conquer_day_5(&vd[vd.len() / 2..], vd[vd.len() - 1], &found),
-            )
-        })
-        .min()
-        .unwrap();
-    println!("Result for day 5 part 2: {}", res_pt_2);
+    #[derive(Debug, Clone)]
+    struct Translation {
+        source: Range<i64>,
+        diff: i64,
+    }
+    type Data = (Vec<i64>, Vec<Vec<Translation>>);
+
+    fn apply_translations(val: &i64, translations: &Vec<Translation>) -> i64 {
+        for t in translations {
+            if t.source.contains(val) {
+                return *val + (t.diff);
+            }
+        }
+        *val
+    }
+
+    pub fn generator(input: &str) -> Data {
+        let (start, rest) = input.split_once("\n\n").unwrap();
+        let seeds: Vec<i64> = start
+            .split("\n")
+            .nth(1)
+            .unwrap()
+            .split_whitespace()
+            .map(|seed| seed.parse().unwrap())
+            .collect();
+
+        let translations = rest
+            .split("\n\n")
+            .map(|lines| {
+                lines
+                    .lines()
+                    .skip(1)
+                    .map(|line| {
+                        let parts: Vec<i64> = line
+                            .split_whitespace()
+                            .map(|p| p.parse().unwrap())
+                            .collect();
+                        Translation {
+                            source: parts[1]..parts[1] + parts[2],
+                            diff: parts[0] - parts[1],
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
+
+        (seeds, translations)
+    }
+
+    pub fn part2(input: &Data) -> i64 {
+        let (seeds_initial, operations) = input;
+        let mut ranges: VecDeque<Range<i64>> = seeds_initial
+            .into_iter()
+            .tuples()
+            .map(|(&a, &b)| a..a + b)
+            .collect();
+        let mut next_ranges: VecDeque<Range<i64>> = VecDeque::new();
+
+        for op in operations {
+            'seeds: while let Some(mut seeds) = ranges.pop_front() {
+                for t in op {
+                    match seeds.intersect_ext(&t.source) {
+                        IntersectionExt::LessOverlap => {
+                            next_ranges.push_back(t.source.start + t.diff..seeds.end + t.diff);
+                            seeds = seeds.start..t.source.start;
+                        }
+                        IntersectionExt::GreaterOverlap => {
+                            next_ranges.push_back(seeds.start + t.diff..t.source.end + t.diff);
+                            seeds = t.source.end..seeds.end;
+                        }
+                        IntersectionExt::Within | IntersectionExt::Same => {
+                            next_ranges.push_back(seeds.start + t.diff..seeds.end + t.diff);
+                            continue 'seeds;
+                        }
+                        IntersectionExt::Over => {
+                            // most complicated case, seeds contains target range, need to split into three parts
+                            next_ranges.push_back(t.source.start + t.diff..t.source.end + t.diff);
+                            ranges.push_front(seeds.start..t.source.start);
+                            ranges.push_front(t.source.end..seeds.end);
+                            continue 'seeds;
+                        }
+                        _ => {}
+                    };
+                }
+                if seeds.end > seeds.start {
+                    // there is still a part of a seed left, add it unchanged
+                    next_ranges.push_back(seeds)
+                }
+            }
+            // swap
+            ranges = next_ranges;
+            next_ranges = VecDeque::new();
+        }
+        ranges.iter().map(|r| r.start).min().unwrap()
+    }
+    println!(
+        "Result for day 5 part 2: {}",
+        part2(&generator(&read_string(5)))
+    );
 }
 
 fn find(set: impl AsRef<[S]>, what: u64) -> u64 {
@@ -531,6 +642,10 @@ impl S {
         } else {
             what
         } // same
+    }
+
+    fn as_range(&self) -> std::ops::Range<u64> {
+        self.source..self.source + self.offset + 1
     }
 }
 
