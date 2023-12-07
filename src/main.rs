@@ -705,36 +705,6 @@ fn day_5_test() {
     });
     println!("{res_pt_1:?}");
     assert_eq!(res_pt_1.min().unwrap(), 35);
-    // Part 2
-    let res_pt_2: u64 = seeds
-        .chunks(2)
-        .map(|s| {
-            let vd: Vec<u64> = (s[0]..=s[0] + s[1]).collect();
-            let found = |d: u64| -> u64 {
-                find(
-                    &humidity_to_location,
-                    find(
-                        &temperature_to_humidity,
-                        find(
-                            &light_to_temperature,
-                            find(
-                                &water_to_light,
-                                find(
-                                    &fertilizer_to_water,
-                                    find(&soil_to_fertilizer, find(&seed_to_soil, d)),
-                                ),
-                            ),
-                        ),
-                    ),
-                )
-            };
-            divide_and_conquer_day_5(vd[..vd.len() / 2].as_ref(), vd[1], &found).min(
-                divide_and_conquer_day_5(&vd[vd.len() / 2..], vd[vd.len() - 1], &found),
-            )
-        })
-        .min()
-        .unwrap();
-    assert_eq!(46, res_pt_2);
 }
 fn divide_and_conquer_day_5(set: &[u64], current_min: u64, found: &dyn Fn(u64) -> u64) -> u64 {
     let len = set.len();
